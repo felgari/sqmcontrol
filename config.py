@@ -48,6 +48,7 @@ class SQMControlCfg(object):
     _DELAY_BET_AZI_VER_PAR_NAME = "DELAY_BET_AZI_VER"
     _ORDER_PAR_NAME = "ORDER"
     _PLOT_COLORS_PAR_NAME = "PLOT_COLORS"
+    _INFO_PAR_NAME = "INFO"
     
     # Valid values for each parameter.
     _MODE_CONTINUOUS_NAME = "CONTINUOUS"
@@ -134,7 +135,11 @@ class SQMControlCfg(object):
     
     @property
     def plot_color_extended(self):
-        return self.plot_colors == SQMControlCfg._PLOT_COLORS_VALUES[1]         
+        return self.plot_colors == SQMControlCfg._PLOT_COLORS_VALUES[1]      
+    
+    @property
+    def info(self):
+        return self._cfg_params[SQMControlCfg._INFO_PAR_NAME]   
         
     def _read_cfg_file(self, file_name):
         """Read parameters from a text file containing a pair parameter/value
