@@ -49,6 +49,7 @@ class SQMControlCfg(object):
     _ORDER_PAR_NAME = "ORDER"
     _PLOT_COLORS_PAR_NAME = "PLOT_COLORS"
     _INFO_PAR_NAME = "INFO"
+    _BEEP_PAR_NAME = "BEEP"
     
     # Valid values for each parameter.
     _MODE_CONTINUOUS_NAME = "CONTINUOUS"
@@ -60,7 +61,8 @@ class SQMControlCfg(object):
     _DELAY_MAX_VALUE = 60
     _DELAY_BET_AZI_VER_MAX_VALUE = 60
     _ORDER_VALUES = [ "AZIMUTH", "ZENITH" ]
-    _PLOT_COLORS_VALUES = [ "FIXED", "EXTEND" ]        
+    _PLOT_COLORS_VALUES = [ "FIXED", "EXTEND" ]       
+    _BEEP_VALUES = [ "YES", "NO" ] 
     
     def __init__(self, file_name):
 
@@ -139,7 +141,12 @@ class SQMControlCfg(object):
     
     @property
     def info(self):
-        return self._cfg_params[SQMControlCfg._INFO_PAR_NAME]   
+        return self._cfg_params[SQMControlCfg._INFO_PAR_NAME]  
+    
+    @property
+    def beep(self):
+        return self._cfg_params[SQMControlCfg._BEEP_PAR_NAME] == \
+            SQMControlCfg._BEEP_VALUES[0]
         
     def _read_cfg_file(self, file_name):
         """Read parameters from a text file containing a pair parameter/value
@@ -212,7 +219,9 @@ class SQMControlCfg(object):
         
         self._check_order()        
         
-        self._check_plot_colors()        
+        self._check_plot_colors()      
+        
+        self._check_beep()  
         
         if self._error_params > 0:            
             raise SQMControlException("There is one or more errors with ",
@@ -354,6 +363,19 @@ class SQMControlCfg(object):
         except KeyError as ke:
            logging.error("%s parameter is required." %
                 SQMControlCfg._PLOT_COLORS_PAR_NAME) 
+           
+    def _check_beep(self):
+        try:
+            m = self.plot_colors
+            
+            if not m in SQMControlCfg._BEEP_VALUES:
+                logging.error("Value '%s' not valid for '%s'. Valid values are: %s" %
+                    (m, SQMControlCfg._BEEP_PAR_NAME, 
+                     SQMControlCfg._BEEP_VALUES))
+                
+        except KeyError as ke:
+           logging.error("%s parameter is required." %
+                SQMControlCfg._BEEP_PAR_NAME)         
            
     def str_continuous_par(self):
         """Returns a string with the values of the continuous mode."""
