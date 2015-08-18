@@ -28,30 +28,123 @@ measures.
 
 import sys
 import logging
+import time
 
-from sqmcparser import *
-from cfgfile import *
+from sprogargs import *
+from config import *
 from logutil import init_log
+from sqmserial import *
+from allsky import *
 
-def periodic_measures(sqm_config, output_file_name):
-    """ Perform the periodic measures.
+COMMENT_CHAR = "#"
+ESC_KEY = chr(27)
+BEEP = '\a'
+
+# To separate time from measure in output messages.
+SEP_STR = "->"
+
+class OutputFile(object):
+    """This class manages the output file."""
+    
+    def __init__(self, original_filename):
+        
+        self._file = None
+        
+        filename = self._get_output_filename(original_filename)
+        
+        try:
+            self._file = open(filename, "w")
+            
+        except (OSError, IOError) as ioe:
+            
+            logging.error("Opening output file %s" % filename)
+            logging.error(ioe)
+        
+    def __del__(self):
+        
+        if self._file is not None:
+            self._file.close()
+
+    def _get_output_filename(self, original_filename):
+        """Generate the output file name from the name given as parameter and 
+        the current data and time.
+        
+        Args:
+            original_filename: Original name for the file.
+        
+        Returns:
+           The name of the output file name. 
+        
+        """
+        
+        return "%s_%s" % (time.strftime("%Y%m%d%H%M%S", time.localtime()), 
+                         original_filename)
+            
+    def write(self, msg):
+        """Write the message received to the output file.
+        
+        Args:
+            msg: String to write.
+            
+        """
+        
+        if self._file is not None:
+            self._file.write(msg)
+            self._file.flush()       
+    
+def process_continuous_measure(measure, output_file):
+    """Process the continuous measure received, saving it.
     
     Args:
-        sqm_config: Configuration parameters.
-        output_file_name: Name of the file for the results.
+        measure: The value of the measure.
+        output_file: Object to write output messages.        
     """
     
-    pass 
+    msg ="%s %s %s\n" % (time.strftime("%d/%m/%Y %H:%M:%S", time.localtime()),
+                         SEP_STR, measure)
+    
+    output_file.write(msg)
 
-def all_sky_measures(sqm_config, output_file_name):
-    """ Perform the all sky measures.
+def continuous_measures(ser, sqm_config):
+    """ Perform the continuous measures.
     
     Args:
+        ser: Serial object used to communicate with SQM. 
         sqm_config: Configuration parameters.
-        output_file_name: Name of the file for the results.
     """
     
-    pass
+    logging.debug("Starting continuous measures.")
+    
+    output_file = OutputFile(progargs.output_file_name)     
+    
+    output_file.write("%s %s\n" % 
+                      (COMMENT_CHAR, sqm_config.str_continuous_par()))
+    
+    running_time = 0
+    
+    periodicity = int(sqm_config.periodicity)
+    
+    duration = int(sqm_config.duration)
+    
+    # Check if a key has been pressed to exit.
+    try:
+        while running_time < duration:
+            
+            # Get a measure from SQM.
+            measure = ser.get_sqm_measure()
+                        
+            # Process measure.
+            process_continuous_measure(measure, output_file)
+                    
+            # Wait the time indicated between measures.
+            for i in range(periodicity):                                    
+                time.sleep(1)
+                
+                running_time += 1                    
+                    
+    # To catch a Ctrl-C.
+    except KeyboardInterrupt:
+        logging.debug("Exiting from continuous measures loop by Ctrl-C.")                                  
 
 def sqm_measures(progargs, sqm_config):
     """Call the methods to perform the measures required.
@@ -61,10 +154,18 @@ def sqm_measures(progargs, sqm_config):
         sqm_config: Configuration parameters.
     """
     
-    if sqm_config.mode_periodic:
-        periodic_measures(sqm_config, progargs.output_file_name)
-    else:
-        all_sky_measures(sqm_config, progargs.output_file_name)
+    try:
+        ser = SerialPort()
+        
+        ser.init_port()
+        
+        if sqm_config.mode_continuous:
+            continuous_measures(ser, sqm_config)
+        else:
+            all_sky_measures(ser, sqm_config)
+            
+    except SerialPortException as spe:
+        logging.error(spe)
 
 def main(progargs):
     """Main function.
@@ -89,6 +190,8 @@ def main(progargs):
         
         # Perform the measures.
         sqm_measures(progargs, sqm_config)
+        
+        logging.debug("Program finished.")
 
     except SQMControlException as sce:
         print sce

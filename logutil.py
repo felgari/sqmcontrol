@@ -63,15 +63,11 @@ def init_log(progargs):
     # Set the logging level.
     logging_level = convert_logging_level(progargs.log_level)
     
-    # If a file name has been provided as program argument use it.
-    if progargs.log_file_provided:
-        log_file = progargs.log_file_name
-    else:
-        log_file = DEFAULT_LOG_FILE_NAME
-    
     # Set the file, format and level of logging output.
-    logging.basicConfig(filename=log_file, \
+    logging.basicConfig(filename=progargs.log_file_name, \
                         format="%(asctime)s:%(levelname)s:%(message)s", \
                         level=logging_level)
     
-    logging.debug("Logging initialized.")
+    print "Logging file created at: %s" %progargs.log_file_name
+    
+    logging.debug("Logging initialized at.")
