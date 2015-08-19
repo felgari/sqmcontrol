@@ -54,7 +54,8 @@ class SQMControlCfg(object):
     # Valid values for each parameter.
     _MODE_CONTINUOUS_NAME = "CONTINUOUS"
     _MODE_SKY_NAME = "SKY"
-    _MODE_VALUES = [ _MODE_CONTINUOUS_NAME, _MODE_SKY_NAME ]
+    _MODE_ONE_NAME = "ONE"
+    _MODE_VALUES = [ _MODE_CONTINUOUS_NAME, _MODE_SKY_NAME, _MODE_ONE_NAME ]
     _PERIODICITY_MAX_VALUE = 45000
     _DURATION_MAX_VALUE = 450000    
     _REPETITIONS_MAX_VALUE = 1000
@@ -94,6 +95,10 @@ class SQMControlCfg(object):
     @property
     def mode_all_sky(self):
         return self.mode == SQMControlCfg._MODE_SKY_NAME    
+    
+    @property
+    def mode_one(self):
+        return self.mode == SQMControlCfg._MODE_ONE_NAME       
 
     @property
     def periodicity(self):

@@ -92,8 +92,46 @@ def continuous_measures(ser, sqm_config, output_filename):
                     
     # To catch a Ctrl-C.
     except KeyboardInterrupt:
-        logging.debug("Exiting from continuous measures loop by Ctrl-C.")                                  
-
+        logging.debug("Exiting from continuous measures loop by Ctrl-C.")   
+        
+def one_measures(ser, sqm_config):
+    """ Perform the continuous measures.
+    
+    Args:
+        ser: Serial object used to communicate with SQM. 
+        sqm_config: Configuration parameters.
+    """
+    
+    exit = False
+    
+    logging.debug("Starting independent measures.")   
+    
+    # Use the periodicity parameter to wait bwtween measures.
+    periodicity = int(sqm_config.periodicity) 
+    
+    while not exit:
+    
+        # Check if a key has been pressed to exit.
+        try:       
+            
+            # Wait the time indicated between measures.
+            for i in range(periodicity):
+                print "Waiting %d seconds before measuring ..." % \
+                    (periodicity - i)
+                                                    
+                time.sleep(1)
+            
+            measure = ser.get_sqm_measure()
+            
+            print "Value measured: %s" % measure
+                             
+        # To catch a Ctrl-C.
+        except KeyboardInterrupt:
+            exit = True
+            msg = "Exiting from independent measures by Ctrl-C."
+            print msg
+            logging.debug(msg)   
+        
 def sqm_measures(progargs, sqm_config):
     """Call the methods to perform the measures required.
     
@@ -109,8 +147,10 @@ def sqm_measures(progargs, sqm_config):
         
         if sqm_config.mode_continuous:
             continuous_measures(ser, sqm_config, progargs.output_file_name)
-        else:
+        elif sqm_config.mode_all_sky:
             all_sky_measures(ser, sqm_config, progargs.output_file_name)
+        elif sqm_config.mode_one:
+            one_measures(ser, sqm_config)
             
     except SerialPortException as spe:
          logging.error(spe) 
