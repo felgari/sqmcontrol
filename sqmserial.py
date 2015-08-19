@@ -112,9 +112,9 @@ class SerialPort(object):
                         break
                     
             except serial.SerialException as se:
-                print se
+                logging.error(se)
             except serial.SerialTimeoutException as ste:
-                print ste
+                logging.error(ste)
             
         return found
         
@@ -158,7 +158,9 @@ class SerialPort(object):
         if self._detect_port():
             logging.debug("Device found at %s" % self._device)
         else:
-            raise SerialPortException("Device not found")        
+            msg = "Device not found. Check there is a SQM connected."
+            
+            raise SerialPortException(msg)        
         
     def get_sqm_measure(self):
         """Returns a measure taken by the SQM."""

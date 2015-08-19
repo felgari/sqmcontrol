@@ -113,7 +113,10 @@ def sqm_measures(progargs, sqm_config):
             all_sky_measures(ser, sqm_config, progargs.output_file_name)
             
     except SerialPortException as spe:
-        logging.error(spe)
+         logging.error(spe) 
+         print spe
+    except OutputFileException as ofe:
+        logging.error(ofe)        
 
 def main(progargs):
     """Main function.
