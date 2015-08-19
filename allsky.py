@@ -25,9 +25,10 @@ formats.
 import logging
 import time
 from config import *
+from outfile import *
 
 # Azimuths and vertical values.
-AZIMUTH_VALUES = [ 0, 20, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330 ]
+AZIMUTH_VALUES = [ 0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330 ]
 VERTICAL_VALUES = [ 20, 40, 60, 80 ]
 
 DELAY_BETWEEN_REPEATED_MEASURES = 0.5
@@ -46,34 +47,82 @@ class AllSkyMeasures(object):
     
     """
     
-    def __init__(self, dim1, dim2):
+    _VALUES_SEP = ","
+    
+    def __init__(self, az_dim, vert_dim):
         
-        self._dim1 = dim1
-        self._dim2 = dim2
-        self._matrix = [[0 for x in range(dim2)] for x in range(dim1)] 
+        self._az_dim = az_dim
+        self._vert_dim = vert_dim
+        self._matrix = [[0 for x in range(vert_dim)] for x in range(az_dim)] 
         self._zenith = None
                      
-    def set(self, dim1, dim2, val):
+    def set(self, az_index, vert_index, val):
+        """Set the values for the coordinates received.
         
-        if dim1 >= 0 and dim1 < self._dim1 and \
-            dim2 >= 0 and dim2 < self._dim2:
-            self._matrix[dim1][dim2] = val
+        Args:
+            az_index: Azimuth coordinate.
+            vert_index: Vertical coordinate.
+            val: Value to set.
+            
+        """
+        
+        if az_index >= 0 and az_index < self._az_dim and \
+            vert_index >= 0 and vert_index < self._vert_dim:
+            self._matrix[az_index][vert_index] = val
         else:
             raise AllSkyException("set: Invalid coordinates: %d %d" % 
-                                  (dim1, dim2))
+                                  (az_index, vert_index))
         
-    def get(self, dim1, dim2):
+    def get(self, az_index, vert_dim):
+        """Returns the values for the coordinates received.
         
+        Args:
+            az_index: Azimuth coordinate.
+            vert_index: Vertical coordinate.
+            
+        Returns:
+            The value.
+            
+        """
+                
         Val = None
         
-        if dim1 >= 0 and dim1 < self._dim1 and \
-            dim2 >= 0 and dim2 < self._dim2:
-            val = self._matrix[dim1][dim2]
+        if az_index >= 0 and az_index < self._az_dim and \
+            vert_dim >= 0 and vert_dim < self._vert_dim:
+            val = self._matrix[az_index][vert_dim]
         else:
             raise AllSkyException("get: Invalid coordinates: %d %d" % 
-                                  (dim1, dim2))
+                                  (az_index, vert_dim))
         
-        return val 
+        return val
+    
+    def save_as_list(self, filename, info):
+        """Save the values in a list by sorted first by azimuth.
+        
+        Args:
+            info: Information to add to the file.
+        """
+        
+        try:
+            output_file = OutputFile(filename)  
+            
+            output_file.write_com(info)       
+            
+            for i in range(self._vert_dim):
+                for j in range(self._az_dim):
+                    output_file.write("%s%s" %
+                                      (self._matrix[j][i],
+                                       AllSkyMeasures._VALUES_SEP))
+                        
+                # Writes the separator if it is not the last value.
+                if i < self._vert_dim - 1:
+                    output_file.write("%s%s" % (self._zenith, 
+                                                AllSkyMeasures._VALUES_SEP))
+                else:
+                    output_file.write("%s" % self._zenith)
+            
+        except OutputFileException as ofe:
+            logging.error(ofe)
     
     @property
     def zenith(self):
@@ -83,8 +132,15 @@ class AllSkyMeasures(object):
     def zenith(self, zenith):
         self._zenith = zenith
         
-def do_beep():
-    print '\a'
+def do_beep(sqm_config):
+    """Reproduces a beep if specified in configuration.
+    
+    Args:   
+        sqm_config: Configuration parameters.     
+    """
+    
+    if sqm_config.beep:
+        print '\a'
         
 def mean_measure(ser, sqm_config):
     """Perform several measures and returns the mean value.
@@ -111,13 +167,13 @@ def mean_measure(ser, sqm_config):
     
     return str(sum(measures) / float(len(measures)))
     
-def all_sky_measures(ser, sqm_config):
+def all_sky_measures(ser, sqm_config, output_filename):
     """Perform the all sky measures.
     
     Args:
         ser: Serial object used to communicate with SQM.     
         sqm_config: Configuration parameters.
-        output_file: Object to write output messages.
+        output_filename: Object to write output messages.
     """
     
     logging.debug("Starting all sky measures.")
@@ -146,8 +202,8 @@ def all_sky_measures(ser, sqm_config):
         print "Order: Processing all the vertical value before passing ", \
             "next azimuths."
             
-    all_sky_values = AllSkyMeasures(len(external_loop_values), 
-                                    len(internal_loop_values))
+    all_sky_values = AllSkyMeasures(len(AZIMUTH_VALUES), 
+                                    len(VERTICAL_VALUES))
     
     delay = int(sqm_config.delay)
     delay_between_azimuth_vertical = int(sqm_config.delay_bet_azi_ver)
@@ -155,14 +211,14 @@ def all_sky_measures(ser, sqm_config):
     for i in range(len(external_loop_values)):
         for j in range(len(internal_loop_values)):
             
-            do_beep() 
+            do_beep(sqm_config) 
             
             for k in range(delay):
                 print "Waiting %d seconds before next measure ..." % (delay - k)
             
                 time.sleep(1)            
             
-            do_beep()
+            do_beep(sqm_config)
             
             print "Measuring next value: %s %d %s %d" % \
                 (external_loop_name, external_loop_values[i], 
@@ -170,7 +226,10 @@ def all_sky_measures(ser, sqm_config):
                 
             measure = mean_measure(ser, sqm_config)
             
-            all_sky_values.set(i, j, measure)
+            if sqm_config.order_is_azimuth:            
+                all_sky_values.set(j, i, measure)
+            else:
+                all_sky_values.set(i, j, measure)
             
             logging.info("Measure: %s %d %s %d is %s" % \
                          (external_loop_name, external_loop_values[i], 
@@ -183,10 +242,12 @@ def all_sky_measures(ser, sqm_config):
             
             time.sleep(1)
             
-    print "Next value: zenith."
+    print "Measuring next value: zenith."
     
     measure = ser.get_sqm_measure()
     
     all_sky_values.zenith = measure
     
     logging.info("Measure: zenith is %s" % measure)
+    
+    all_sky_values.save_as_list(output_filename, sqm_config.info)

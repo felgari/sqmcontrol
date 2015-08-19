@@ -30,74 +30,22 @@ import sys
 import logging
 import time
 
+from logutil import init_log
 from sprogargs import *
 from config import *
-from logutil import init_log
 from sqmserial import *
 from allsky import *
-
-COMMENT_CHAR = "#"
-ESC_KEY = chr(27)
-BEEP = '\a'
+from outfile import *
 
 # To separate time from measure in output messages.
-SEP_STR = "->"
-
-class OutputFile(object):
-    """This class manages the output file."""
-    
-    def __init__(self, original_filename):
-        
-        self._file = None
-        
-        filename = self._get_output_filename(original_filename)
-        
-        try:
-            self._file = open(filename, "w")
-            
-        except (OSError, IOError) as ioe:
-            
-            logging.error("Opening output file %s" % filename)
-            logging.error(ioe)
-        
-    def __del__(self):
-        
-        if self._file is not None:
-            self._file.close()
-
-    def _get_output_filename(self, original_filename):
-        """Generate the output file name from the name given as parameter and 
-        the current data and time.
-        
-        Args:
-            original_filename: Original name for the file.
-        
-        Returns:
-           The name of the output file name. 
-        
-        """
-        
-        return "%s_%s" % (time.strftime("%Y%m%d%H%M%S", time.localtime()), 
-                         original_filename)
-            
-    def write(self, msg):
-        """Write the message received to the output file.
-        
-        Args:
-            msg: String to write.
-            
-        """
-        
-        if self._file is not None:
-            self._file.write(msg)
-            self._file.flush()       
+SEP_STR = "->"       
     
 def process_continuous_measure(measure, output_file):
     """Process the continuous measure received, saving it.
     
     Args:
         measure: The value of the measure.
-        output_file: Object to write output messages.        
+        output_file: Object to write output messages.      
     """
     
     msg ="%s %s %s\n" % (time.strftime("%d/%m/%Y %H:%M:%S", time.localtime()),
@@ -105,20 +53,20 @@ def process_continuous_measure(measure, output_file):
     
     output_file.write(msg)
 
-def continuous_measures(ser, sqm_config):
+def continuous_measures(ser, sqm_config, output_filename):
     """ Perform the continuous measures.
     
     Args:
         ser: Serial object used to communicate with SQM. 
         sqm_config: Configuration parameters.
+        output_filename: Object to write output messages.
     """
     
     logging.debug("Starting continuous measures.")
     
-    output_file = OutputFile(progargs.output_file_name)     
+    output_file = OutputFile(output_filename)     
     
-    output_file.write("%s %s\n" % 
-                      (COMMENT_CHAR, sqm_config.str_continuous_par()))
+    output_file.write_com(sqm_config.str_continuous_par())
     
     running_time = 0
     
@@ -160,9 +108,9 @@ def sqm_measures(progargs, sqm_config):
         ser.init_port()
         
         if sqm_config.mode_continuous:
-            continuous_measures(ser, sqm_config)
+            continuous_measures(ser, sqm_config, progargs.output_file_name)
         else:
-            all_sky_measures(ser, sqm_config)
+            all_sky_measures(ser, sqm_config, progargs.output_file_name)
             
     except SerialPortException as spe:
         logging.error(spe)

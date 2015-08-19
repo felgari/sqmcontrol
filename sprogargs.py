@@ -30,7 +30,7 @@ class ProgramArguments(object):
     DEFAULT_LOG_LEVEL = "DEBUG"
     DEFAULT_LOG_FILE_NAME = "sqmcontrol.log"
     DEFAULT_CFG_FILE_NAME = "sqm.cfg"     
-    DEFAULT_OUT_FILE_NAME = "sqmcontrol.out"
+    DEFAULT_OUT_FILE_NAME = "results"
     
     def __init__(self):
         """Initializes parser. 
