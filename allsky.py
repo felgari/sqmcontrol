@@ -108,14 +108,14 @@ class AllSkyMeasures(object):
             
             output_file.write_com(info)       
             
-            for i in range(self._vert_dim):
-                for j in range(self._az_dim):
+            for i in range(self._az_dim):
+                for j in range(self._vert_dim):
                     output_file.write("%s%s" %
                                       (self._matrix[j][i],
                                        AllSkyMeasures._VALUES_SEP))
                         
                 # Writes the separator if it is not the last value.
-                if i < self._vert_dim - 1:
+                if i < self._az_dim - 1:
                     output_file.write("%s%s" % (self._zenith, 
                                                 AllSkyMeasures._VALUES_SEP))
                 else:
