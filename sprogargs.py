@@ -29,8 +29,7 @@ class ProgramArguments(object):
     MIN_NUM_ARGVS = 0   
     DEFAULT_LOG_LEVEL = "DEBUG"
     DEFAULT_LOG_FILE_NAME = "sqmcontrol.log"
-    DEFAULT_CFG_FILE_NAME = "sqm.cfg"     
-    DEFAULT_OUT_FILE_NAME = "results"
+    DEFAULT_CFG_FILE_NAME = "sqm.cfg"       
     
     def __init__(self):
         """Initializes parser. 
@@ -50,10 +49,7 @@ class ProgramArguments(object):
                                    help="File to save the log messages") 
         
         self.__parser.add_argument("-v", metavar="log level", dest="v", 
-                                   help="Level of the log messages to generate")         
-        
-        self.__parser.add_argument("-o", dest="o", metavar="out", 
-                                   help="Name of the file with the measures.")         
+                                   help="Level of the log messages to generate")               
         
         self.__parser.add_argument("-p", dest="p", action="store_true", 
                                    help="Save plots to files.")           
@@ -69,18 +65,11 @@ class ProgramArguments(object):
             self.__args.l = ProgramArguments.DEFAULT_LOG_FILE_NAME
             
         if self.__args.v is None:
-            self.__args.v = ProgramArguments.DEFAULT_LOG_LEVEL
-            
-        if self.__args.o is None:
-            self.__args.o = ProgramArguments.DEFAULT_OUT_FILE_NAME                                    
+            self.__args.v = ProgramArguments.DEFAULT_LOG_LEVEL                                  
         
     @property    
     def config_file_name(self):        
-        return self.__args.c   
-    
-    @property    
-    def output_file_name(self):        
-        return self.__args.o        
+        return self.__args.c        
         
     @property
     def store_plot(self):

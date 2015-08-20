@@ -96,7 +96,7 @@ class AllSkyMeasures(object):
         
         return val
     
-    def save_as_list(self, filename, info):
+    def save_as_list(self, output_filename, info):
         """Save the values in a list by sorted first by azimuth.
         
         Args:
@@ -104,7 +104,7 @@ class AllSkyMeasures(object):
         """
         
         try:
-            output_file = OutputFile(filename)  
+            output_file = OutputFile(output_filename)  
             
             output_file.write_com(info)       
             

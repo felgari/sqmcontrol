@@ -37,6 +37,10 @@ from sqmserial import *
 from allsky import *
 from outfile import *
 
+# Default names for output files.
+DEFAULT_SKY_OUT_FILE_NAME = "all_sky"
+DEFAULT_CONT_OUT_FILE_NAME = "continuous"      
+
 # To separate time from measure in output messages.
 SEP_STR = "->"       
     
@@ -146,9 +150,9 @@ def sqm_measures(progargs, sqm_config):
         ser.init_port()
         
         if sqm_config.mode_continuous:
-            continuous_measures(ser, sqm_config, progargs.output_file_name)
+            continuous_measures(ser, sqm_config, DEFAULT_CONT_OUT_FILE_NAME)
         elif sqm_config.mode_all_sky:
-            all_sky_measures(ser, sqm_config, progargs.output_file_name)
+            all_sky_measures(ser, sqm_config, DEFAULT_SKY_OUT_FILE_NAME)
         elif sqm_config.mode_one:
             one_measures(ser, sqm_config)
             
