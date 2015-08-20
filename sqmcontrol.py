@@ -55,6 +55,9 @@ def process_continuous_measure(measure, output_file):
     msg ="%s %s %s\n" % (time.strftime("%d/%m/%Y %H:%M:%S", time.localtime()),
                          SEP_STR, measure)
     
+    # Avoid the final new line character.
+    print msg[:-1]
+    
     output_file.write(msg)
 
 def continuous_measures(ser, sqm_config, output_filename):
