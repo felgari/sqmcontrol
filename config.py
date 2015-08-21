@@ -57,7 +57,7 @@ class SQMControlCfg(object):
     _MODE_ONE_NAME = "ONE"
     _MODE_VALUES = [ _MODE_CONTINUOUS_NAME, _MODE_SKY_NAME, _MODE_ONE_NAME ]
     _PERIODICITY_MAX_VALUE = 45000
-    _DURATION_MAX_VALUE = 450000    
+    _DURATION_MAX_VALUE = 500000    
     _REPETITIONS_MAX_VALUE = 1000
     _DELAY_MAX_VALUE = 60
     _DELAY_BET_AZI_VER_MAX_VALUE = 60
@@ -371,7 +371,7 @@ class SQMControlCfg(object):
            
     def _check_beep(self):
         try:
-            m = self.plot_colors
+            m = self.beep
             
             if not m in SQMControlCfg._BEEP_VALUES:
                 logging.error("Value '%s' not valid for '%s'. Valid values are: %s" %
