@@ -54,8 +54,14 @@ def process_continuous_measure(measure, output_file):
         output_file: Object to write output messages.      
     """
     
-    msg ="%s %s %s\n" % (time.strftime("%d/%m/%Y %H:%M:%S", time.localtime()),
-                         SEP_STR, measure)
+    lo_time = time.localtime()
+    
+    # Use astropy time to calculate MJD.
+    t_utc = time.strftime("%Y-%m-%dT%H:%M:%S.0", time.localtime())
+    t_astro = Time(t_utc, format='isot', scale='utc')
+    
+    msg ="%s (%.10g) %s %s\n" % (time.strftime("%d-%m-%Y %H:%M:%S", lo_time),
+                            t_astro.mjd, SEP_STR, measure)
     
     # Avoid the final new line character.
     print msg[:-1]
@@ -165,6 +171,10 @@ def sqm_measures(progargs, sqm_config):
             all_sky_measures(ser, sqm_config, DEFAULT_SKY_OUT_FILE_NAME)
         elif sqm_config.mode_one:
             one_measures(ser, sqm_config)
+        else:
+            msg = "The mode specified is not recognized."
+            logging.warning(msg)
+            print msg
             
     except SerialPortException as spe:
          logging.error(spe) 
