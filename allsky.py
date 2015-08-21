@@ -26,6 +26,7 @@ import logging
 import time
 from config import *
 from outfile import *
+from sound import *
 
 # Azimuths and vertical values.
 AZIMUTH_VALUES = [ 0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330 ]
@@ -132,16 +133,6 @@ class AllSkyMeasures(object):
     def zenith(self, zenith):
         self._zenith = zenith
         
-def do_beep(sqm_config):
-    """Reproduces a beep if specified in configuration.
-    
-    Args:   
-        sqm_config: Configuration parameters.     
-    """
-    
-    if sqm_config.beep:
-        print '\a'
-        
 def mean_measure(ser, sqm_config):
     """Perform several measures and returns the mean value.
     
@@ -209,22 +200,23 @@ def all_sky_measures(ser, sqm_config, output_filename):
     delay_between_azimuth_vertical = int(sqm_config.delay_bet_azi_ver)
         
     for i in range(len(external_loop_values)):
-        for j in range(len(internal_loop_values)):
-            
-            do_beep(sqm_config) 
+        for j in range(len(internal_loop_values)): 
             
             for k in range(delay):
                 print "Waiting %d seconds before next measure ..." % (delay - k)
+                
+                if k == delay - 1:
+                    start_sound(sqm_config)
             
                 time.sleep(1)            
-            
-            do_beep(sqm_config)
             
             print "Measuring next value: %s %d %s %d" % \
                 (external_loop_name, external_loop_values[i], 
                  internal_loop_name, internal_loop_values[j])    
                 
             measure = mean_measure(ser, sqm_config)
+            
+            end_sound(sqm_config)
             
             if sqm_config.order_is_azimuth:            
                 all_sky_values.set(j, i, measure)

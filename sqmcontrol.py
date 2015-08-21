@@ -29,6 +29,7 @@ measures.
 import sys
 import logging
 import time
+from astropy.time import Time
 
 from logutil import init_log
 from sprogargs import *
@@ -36,6 +37,7 @@ from config import *
 from sqmserial import *
 from allsky import *
 from outfile import *
+from sound import *
 
 # Default names for output files.
 DEFAULT_SKY_OUT_FILE_NAME = "all_sky"
@@ -125,10 +127,15 @@ def one_measures(ser, sqm_config):
             for i in range(periodicity):
                 print "Waiting %d seconds before measuring ..." % \
                     (periodicity - i)
+                    
+                if i == periodicity - 1:
+                    start_sound(sqm_config)
                                                     
                 time.sleep(1)
             
             measure = ser.get_sqm_measure()
+            
+            end_sound(sqm_config)
             
             print "Value measured: %s" % measure
                              
