@@ -49,12 +49,13 @@ class AllSkyMeasures(object):
     """
     
     _VALUES_SEP = ","
+    _NN_SUFFIX = "_NN"
     
     def __init__(self, az_dim, vert_dim):
         
         self._az_dim = az_dim
         self._vert_dim = vert_dim
-        self._matrix = [[0 for x in range(vert_dim)] for x in range(az_dim)] 
+        self._matrix = [[0 for x in range(az_dim)] for x in range(vert_dim)] 
         self._zenith = None
                      
     def set(self, az_index, vert_index, val):
@@ -69,7 +70,7 @@ class AllSkyMeasures(object):
         
         if az_index >= 0 and az_index < self._az_dim and \
             vert_index >= 0 and vert_index < self._vert_dim:
-            self._matrix[az_index][vert_index] = val
+            self._matrix[vert_index][az_index] = val
         else:
             raise AllSkyException("set: Invalid coordinates: %d %d" % 
                                   (az_index, vert_index))
@@ -90,7 +91,7 @@ class AllSkyMeasures(object):
         
         if az_index >= 0 and az_index < self._az_dim and \
             vert_dim >= 0 and vert_dim < self._vert_dim:
-            val = self._matrix[az_index][vert_dim]
+            val = self._matrix[vert_dim][az_index]
         else:
             raise AllSkyException("get: Invalid coordinates: %d %d" % 
                                   (az_index, vert_dim))
@@ -103,6 +104,8 @@ class AllSkyMeasures(object):
         Args:
             info: Information to add to the file.
         """
+        
+        logging.debug("Saving as list in file: %s" % output_filename)
         
         try:
             output_file = OutputFile(output_filename)  
@@ -124,6 +127,37 @@ class AllSkyMeasures(object):
             
         except OutputFileException as ofe:
             logging.error(ofe)
+            
+    def save_as_list_by_vertical(self, output_filename, info):
+        """Save the values in several list by each vertical altitude.
+        
+        Args:
+            info: Information to add to the file.
+        """
+        
+        new_output_filename = "%s%s" % \
+            (output_filename, AllSkyMeasures._NN_SUFFIX)
+        
+        logging.debug("Saving as list by vertical in file: %s" % 
+                      new_output_filename)
+        
+        try:
+            output_file = OutputFile(new_output_filename)  
+            
+            output_file.write_com(info)       
+            
+            for i in range(self._vert_dim):
+                
+                val = [ float(v) for v in self._matrix[i] ]
+                
+                output_file.write("m%d = %s\n" % 
+                                  ((VERTICAL_VALUES[i]),
+                                   str(val)))
+            
+            output_file.write("m90 = [%s]" % self._zenith)
+            
+        except OutputFileException as ofe:
+            logging.error(ofe)            
     
     @property
     def zenith(self):
@@ -242,4 +276,6 @@ def all_sky_measures(ser, sqm_config, output_filename):
     
     logging.info("Measure: zenith is %s" % measure)
     
+    # Save to files in different formats.
     all_sky_values.save_as_list(output_filename, sqm_config.info)
+    all_sky_values.save_as_list_by_vertical(output_filename, sqm_config.info)
