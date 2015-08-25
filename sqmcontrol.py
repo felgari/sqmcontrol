@@ -203,6 +203,9 @@ def main(progargs):
         # Read configuration file. 
         sqm_config = SQMControlCfg(progargs.config_file_name)
         
+        # Show information about mode and its parameters.
+        print sqm_config.get_info()
+        
         # Perform the measures.
         sqm_measures(progargs, sqm_config)
         

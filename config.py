@@ -83,6 +83,28 @@ class SQMControlCfg(object):
             
     def __str__(self):        
         return str(self._cfg_params)
+    
+    def get_info(self):
+        """Returns a string with information about the mode and its parameters.
+        """
+        
+        str = "Mode unknown"
+        
+        if self.mode_continuous:
+            str = "[Mode: %s]\t[Periodicity: %s]\t[Duration: %s]" % \
+            (SQMControlCfg._MODE_CONTINUOUS_NAME, self.periodicity, 
+             self.duration)
+            
+        elif self.mode_all_sky:
+            str = "[Mode: %s]\t[Order: %s]\t[Delay: %s]\t[Delay between az and ve.: %s]" % \
+            (SQMControlCfg._MODE_SKY_NAME, self.order, self.delay,
+             self.delay_bet_azi_ver)
+
+        elif self.mode_one:
+            str = "[Mode: %s]\t[Delay: %s]" % \
+            (SQMControlCfg._MODE_ONE_NAME, self.delay)
+            
+        return str
         
     @property
     def mode(self):
